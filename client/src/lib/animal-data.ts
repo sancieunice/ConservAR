@@ -37,7 +37,7 @@ export const DEFAULT_ANIMALS: Animal[] = [
     conservationStatus: "Vulnerable",
     region: "Africa",
     habitat: "Savannas",
-    imageUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    imageUrl: "/images/african-elephant.jpg",
     modelUrl: "/models/elephant.glb",
     hasArModel: true
   },
