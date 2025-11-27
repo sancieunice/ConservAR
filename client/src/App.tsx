@@ -29,7 +29,7 @@ function App() {
           <ARProvider>
             <ChallengeProvider>
               <ChatbotProvider>
-                <div className="flex flex-col min-h-screen">
+                <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#1f5233] via-[#2d7a4a] to-[#1f5233]">
                   <Header />
                   <main className="flex-grow">
                     <Router />

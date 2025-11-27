@@ -13,27 +13,30 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  
+
   /* Nature-inspired colors */
-  --primary: 151 43% 30%; /* Forest green */
+  --primary: 151 43% 30%;
+  /* Forest green */
   --primary-foreground: 211 100% 99%;
-  --secondary: 155 54% 18%; /* Dark green */
+  --secondary: 155 54% 18%;
+  /* Dark green */
   --secondary-foreground: 0 0% 98%;
-  --accent: 32 100% 62%; /* Orange accent */
+  --accent: 32 100% 62%;
+  /* Orange accent */
   --accent-foreground: 24 9.8% 10%;
-  
+
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
   --ring: 20 14.3% 4.1%;
   --radius: 0.5rem;
-  
+
   /* Chart colors */
-  --chart-1: 151 43% 30%; 
-  --chart-2: 155 54% 18%; 
-  --chart-3: 32 100% 62%; 
-  --chart-4: 25 95% 53%; 
-  --chart-5: 142 76% 36%; 
-  
+  --chart-1: 151 43% 30%;
+  --chart-2: 155 54% 18%;
+  --chart-3: 32 100% 62%;
+  --chart-4: 25 95% 53%;
+  --chart-5: 142 76% 36%;
+
   /* Sidebar custom colors */
   --sidebar-background: 151 43% 30%;
   --sidebar-foreground: 0 0% 98%;
@@ -56,26 +59,29 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  
+
   /* Nature-inspired dark mode colors */
-  --primary: 151 33% 25%; /* Darker forest green */
+  --primary: 151 33% 25%;
+  /* Darker forest green */
   --primary-foreground: 211 100% 99%;
-  --secondary: 155 44% 16%; /* Very dark green */
+  --secondary: 155 44% 16%;
+  /* Very dark green */
   --secondary-foreground: 0 0% 98%;
-  --accent: 32 90% 55%; /* Deeper orange accent */
+  --accent: 32 90% 55%;
+  /* Deeper orange accent */
   --accent-foreground: 0 0% 98%;
-  
+
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
   --ring: 240 4.9% 83.9%;
-  
+
   /* Chart colors - dark mode */
-  --chart-1: 151 33% 25%; 
-  --chart-2: 155 44% 16%; 
-  --chart-3: 32 90% 55%; 
-  --chart-4: 25 85% 48%; 
-  --chart-5: 142 66% 30%; 
-  
+  --chart-1: 151 33% 25%;
+  --chart-2: 155 44% 16%;
+  --chart-3: 32 90% 55%;
+  --chart-4: 25 85% 48%;
+  --chart-5: 142 66% 30%;
+
   /* Sidebar custom colors - dark mode */
   --sidebar-background: 151 33% 25%;
   --sidebar-foreground: 0 0% 98%;
@@ -89,12 +95,39 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: theme('colors.border');
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased;
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: theme('colors.foreground');
   }
+
+  html {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    background-attachment: fixed;
+  }
+}
+
+/* Prevent layout shift when scrollbars appear/disappear by reserving scrollbar space */
+html {
+  /* Modern browsers */
+  scrollbar-gutter: stable both-edges;
+  overflow-y: scroll;
+}
+
+/* Ensure a vertical scrollbar is always present to avoid body shift */
+body {
+  overflow-y: scroll;
+}
+
+/* Prevent body shift when modals/dialogs open by NOT hiding overflow */
+body[style*="overflow: hidden"] {
+  overflow-y: scroll !important;
+  padding-right: 0 !important;
 }
 
 /* Animation for sound wave */
@@ -113,15 +146,41 @@
   animation: sound-wave 1.2s infinite ease-in-out;
 }
 
-.sound-wave span:nth-child(1) { animation-delay: 0s; height: 10px; }
-.sound-wave span:nth-child(2) { animation-delay: 0.2s; height: 16px; }
-.sound-wave span:nth-child(3) { animation-delay: 0.4s; height: 8px; }
-.sound-wave span:nth-child(4) { animation-delay: 0.6s; height: 14px; }
-.sound-wave span:nth-child(5) { animation-delay: 0.8s; height: 12px; }
+.sound-wave span:nth-child(1) {
+  animation-delay: 0s;
+  height: 10px;
+}
+
+.sound-wave span:nth-child(2) {
+  animation-delay: 0.2s;
+  height: 16px;
+}
+
+.sound-wave span:nth-child(3) {
+  animation-delay: 0.4s;
+  height: 8px;
+}
+
+.sound-wave span:nth-child(4) {
+  animation-delay: 0.6s;
+  height: 14px;
+}
+
+.sound-wave span:nth-child(5) {
+  animation-delay: 0.8s;
+  height: 12px;
+}
 
 @keyframes sound-wave {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.5); }
+
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(1.5);
+  }
 }
 
 /* Animation for chatbot messages */
@@ -130,8 +189,15 @@
 }
 
 @keyframes slideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Animation for cards */
@@ -158,8 +224,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* AR placeholder background */

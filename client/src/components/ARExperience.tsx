@@ -20,8 +20,8 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
     const checkARSupport = async () => {
       try {
         // Simple check for WebXR support
-        const supported = 
-          'xr' in navigator && 
+        const supported =
+          'xr' in navigator &&
           await (navigator as any).xr?.isSessionSupported('immersive-ar');
         setIsARSupported(!!supported);
       } catch (error) {
@@ -29,7 +29,7 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
         setIsARSupported(false);
       }
     };
-    
+
     checkARSupport();
   }, []);
 
@@ -38,7 +38,7 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
       alert("Your device doesn't support AR capabilities. Please try on a newer device with AR support.");
       return;
     }
-    
+
     try {
       await startAR();
       initializeAR();
@@ -55,7 +55,7 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
           <h2 className="font-heading font-bold text-3xl mb-3">AR Wildlife Experience</h2>
           <p className="max-w-2xl mx-auto opacity-90">Bring endangered species into your world with our augmented reality experience</p>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3 rounded-xl overflow-hidden shadow-xl">
             <div className="ar-placeholder w-full h-96 relative bg-black flex items-center justify-center">
@@ -84,7 +84,7 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
               </div>
             </div>
           </div>
-          
+
           <div className="lg:col-span-2">
             <Card className="bg-primary rounded-xl shadow-xl mb-8">
               <CardContent className="p-6">
@@ -100,11 +100,10 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
                 ) : (
                   <ul className="space-y-4">
                     {arModels.map((model) => (
-                      <li 
+                      <li
                         key={model.id}
-                        className={`flex items-center justify-between p-3 bg-white ${
-                          selectedModel?.id === model.id ? 'bg-opacity-30' : 'bg-opacity-10'
-                        } rounded-lg hover:bg-opacity-20 transition-colors cursor-pointer`}
+                        className={`flex items-center justify-between p-3 bg-white ${selectedModel?.id === model.id ? 'bg-opacity-30' : 'bg-opacity-10'
+                          } rounded-lg hover:bg-opacity-20 transition-colors cursor-pointer`}
                         onClick={() => selectARModel(model)}
                       >
                         <div className="flex items-center">
@@ -120,7 +119,7 @@ const ARExperience = ({ arModels, isLoading }: ARExperienceProps) => {
                 )}
               </CardContent>
             </Card>
-            
+
             <Card className="bg-primary rounded-xl shadow-xl">
               <CardContent className="p-6">
                 <h3 className="font-heading font-bold text-xl mb-4 text-white">How to Use</h3>
