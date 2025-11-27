@@ -2,248 +2,274 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useChattbot } from "@/context/ChatbotContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Send, Mic, Bot, Volume2, VolumeX, Sparkles, 
+  Leaf, Globe, BookOpen, X 
+} from "lucide-react";
 
-interface Message {
-  role: 'user' | 'bot';
-  content: string;
-  timestamp: string;
-}
+// --- Internal Component: Typewriter Effect ---
+// Makes the bot feel like it is "thinking" and typing out the answer
+const Typewriter = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  
+  useEffect(() => {
+    setDisplayedText("");
+    let index = 0;
+    const intervalId = setInterval(() => {
+      setDisplayedText((prev) => prev + text.charAt(index));
+      index++;
+      if (index === text.length) {
+        clearInterval(intervalId);
+        if (onComplete) onComplete();
+      }
+    }, 15); // Adjust typing speed here
+    return () => clearInterval(intervalId);
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+};
 
 const ConservationChatbot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { messages, addMessage } = useChattbot();
   const { toast } = useToast();
 
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+  // Scroll to bottom helper
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-  // Initialize with a welcome message if there are no messages
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  // Initial Welcome Message
   useEffect(() => {
     if (messages.length === 0) {
       addMessage({
         role: 'bot',
-        content: "Hello! I'm your Wildlife Conservation Guide. Ask me about conservation efforts, endangered species, or how different cultures are working to protect wildlife.",
+        content: "Hello! I'm your ConservAR Guide. Ask me about endangered species, conservation strategies, or indigenous nature practices.",
         timestamp: new Date().toISOString()
       });
     }
   }, [messages, addMessage]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- Voice: Speak Text (Text-to-Speech) ---
+  const speakText = (text: string) => {
+    if (!soundEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.pitch = 1;
+    utterance.rate = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // --- Voice: Listen (Speech-to-Text) ---
+  const toggleListening = () => {
+    // Check for browser support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
+    if (!SpeechRecognition) {
+      toast({ title: "Error", description: "Browser doesn't support speech recognition.", variant: "destructive" });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+
+    if (!isListening) {
+      setIsListening(true);
+      recognition.start();
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+    } else {
+      setIsListening(false);
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!inputMessage.trim()) return;
     
-    const userMessage = inputMessage.trim();
+    const userMsg = inputMessage.trim();
     setInputMessage('');
+    setIsListening(false);
     
-    // Add user message immediately
-    addMessage({
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Send to backend
+    addMessage({ role: 'user', content: userMsg, timestamp: new Date().toISOString() });
     setIsLoading(true);
+
     try {
-      const response = await apiRequest('POST', '/api/chatbot', { message: userMessage });
+      const response = await apiRequest('POST', '/api/chatbot', { message: userMsg });
       const data = await response.json();
       
-      addMessage({
-        role: 'bot',
-        content: data.message,
-        timestamp: data.timestamp
-      });
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Conversation Error",
-        description: "Failed to get a response from the conservation guide. Please try again.",
-        variant: "destructive"
-      });
+      addMessage({ role: 'bot', content: data.message, timestamp: data.timestamp });
       
-      // Fallback message in case of error
-      addMessage({
-        role: 'bot',
-        content: "I'm sorry, I'm having trouble responding right now. Please try again later.",
-        timestamp: new Date().toISOString()
+      // Read the response aloud if sound is on
+      if (soundEnabled) speakText(data.message);
+      
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to connect to Conservation Guide.", variant: "destructive" });
+      addMessage({ 
+        role: 'bot', 
+        content: "I'm having trouble connecting to the network right now. Please try again.", 
+        timestamp: new Date().toISOString() 
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSuggestedQuestion = (question: string) => {
-    setInputMessage(question);
-  };
-
   return (
-    <section id="conservation" className="py-16 bg-primary text-white">
+    <section id="conservation" className="py-16 bg-gradient-to-b from-slate-900 to-slate-950 text-white min-h-[700px]">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="font-heading font-bold text-3xl mb-3">Wildlife Conservation Assistant</h2>
-          <p className="max-w-2xl mx-auto opacity-90">Ask questions about wildlife conservation efforts around the world</p>
+        
+        {/* Header Section */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center p-2 bg-emerald-500/10 rounded-full mb-4 border border-emerald-500/20">
+             <Sparkles className="w-4 h-4 text-emerald-400 mr-2" />
+             <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">ConservAR AI 2.0</span>
+          </div>
+          <h2 className="font-bold text-4xl mb-3">Wildlife Conservation Guide</h2>
+          <p className="max-w-2xl mx-auto text-slate-400">Interactive AI powered by global conservation data.</p>
         </div>
         
-        <div className="max-w-4xl mx-auto">
-          <Card className="bg-white rounded-xl overflow-hidden shadow-2xl">
-            <CardHeader className="bg-secondary p-4 flex items-center">
-              <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center mr-3">
-                <i className="fas fa-robot"></i>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+          
+          {/* Sidebar (Quick Prompts) */}
+          <div className="hidden lg:block col-span-1 space-y-3">
+            <h3 className="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-4">Quick Topics</h3>
+            {[
+              { label: "Endangered List", icon: <Leaf className="w-4 h-4"/>, query: "What animals are most endangered?" },
+              { label: "Global Action", icon: <Globe className="w-4 h-4"/>, query: "Show me global conservation initiatives." },
+              { label: "Learn More", icon: <BookOpen className="w-4 h-4"/>, query: "Give me educational resources on wildlife." },
+            ].map((item, i) => (
+              <button
+                key={i}
+                onClick={() => setInputMessage(item.query)}
+                className="flex items-center w-full p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 rounded-lg transition-all text-sm text-left group"
+              >
+                <span className="text-emerald-500 group-hover:text-emerald-400 mr-3">{item.icon}</span>
+                <span className="text-slate-300 group-hover:text-white">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Main Chat Card */}
+          <Card className="col-span-1 lg:col-span-3 bg-slate-900/80 border-white/10 shadow-2xl overflow-hidden backdrop-blur-sm h-[600px] flex flex-col">
+            <CardHeader className="bg-white/5 p-4 flex flex-row items-center justify-between border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20">
+                  <Bot className="text-white w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">EcoGuide</h3>
+                  <span className="flex items-center text-xs text-emerald-400">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
+                    Online
+                  </span>
+                </div>
               </div>
-              <h3 className="font-heading font-bold text-xl text-white">Conservation Guide</h3>
+              <Button variant="ghost" size="icon" onClick={() => setSoundEnabled(!soundEnabled)} className="text-slate-400 hover:text-white">
+                {soundEnabled ? <Volume2 className="w-5 h-5"/> : <VolumeX className="w-5 h-5"/>}
+              </Button>
             </CardHeader>
             
-            <div className="h-80 p-4 overflow-y-auto bg-gray-50">
-              {messages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex items-start chatbot-message mb-4 ${
-                    message.role === 'user' ? 'justify-end' : ''
-                  }`}
-                >
-                  {message.role === 'bot' && (
-                    <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                      <i className="fas fa-robot text-sm text-white"></i>
-                    </div>
-                  )}
-                  
-                  <div className={`${
-                    message.role === 'user' 
-                      ? 'bg-accent text-white rounded-lg rounded-tr-none' 
-                      : 'bg-secondary text-white rounded-lg rounded-tl-none'
-                  } p-3 max-w-xs md:max-w-md`}>
-                    {message.content.split('\n').map((line, i) => (
-                      <p key={i} className={i > 0 ? 'mt-2' : ''}>{line}</p>
-                    ))}
-                  </div>
-                  
-                  {message.role === 'user' && (
-                    <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center ml-2 mt-1 flex-shrink-0">
-                      <i className="fas fa-user text-sm text-white"></i>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black/20">
+              <AnimatePresence initial={false}>
+                {messages.map((message, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                     <div className={`max-w-[85%] lg:max-w-[75%] p-4 rounded-2xl ${
+                       message.role === 'user' 
+                       ? 'bg-emerald-600 text-white rounded-tr-sm' 
+                       : 'bg-slate-800 text-slate-200 border border-white/10 rounded-tl-sm'
+                     }`}>
+                        <div className="flex items-start gap-3">
+                          {message.role === 'bot' && (
+                             <div className="w-6 h-6 bg-slate-950 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                               <Bot className="w-3 h-3 text-emerald-500" />
+                             </div>
+                          )}
+                          <div className="text-sm leading-relaxed">
+                            {message.role === 'bot' && index === messages.length - 1 && !isLoading ? (
+                              <Typewriter text={message.content} onComplete={scrollToBottom} />
+                            ) : (
+                              message.content
+                            )}
+                          </div>
+                        </div>
+                     </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
               
               {isLoading && (
-                <div className="flex items-start chatbot-message">
-                  <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                    <i className="fas fa-robot text-sm text-white"></i>
-                  </div>
-                  <div className="bg-secondary text-white p-3 rounded-lg rounded-tl-none">
-                    <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                  <div className="bg-slate-800 border border-white/10 p-4 rounded-2xl rounded-tl-sm ml-0">
+                    <div className="flex space-x-1.5">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
-              
-              <div ref={messagesEndRef}></div>
+              <div ref={messagesEndRef} />
             </div>
             
-            <CardContent className="p-4 border-t">
-              <form className="flex" onSubmit={handleSubmit}>
-                <Input 
-                  type="text" 
-                  placeholder="Ask about wildlife conservation..." 
-                  className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Button 
-                  type="submit" 
-                  className="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-r-lg transition-colors"
-                  disabled={isLoading}
-                >
-                  <i className="fas fa-paper-plane"></i>
-                </Button>
+            <CardContent className="p-4 bg-slate-900 border-t border-white/5">
+              <form className="relative flex items-center gap-2" onSubmit={handleSubmit}>
+                 <Button 
+                   type="button" 
+                   variant="ghost" 
+                   size="icon" 
+                   onClick={toggleListening}
+                   className={`shrink-0 rounded-full ${isListening ? 'text-red-500 bg-red-500/10' : 'text-slate-400 hover:text-white'}`}
+                 >
+                   {isListening ? <X className="w-5 h-5"/> : <Mic className="w-5 h-5" />}
+                 </Button>
+                 
+                 <Input 
+                   type="text" 
+                   placeholder={isListening ? "Listening..." : "Ask about wildlife conservation..."}
+                   className="flex-grow bg-slate-950 border-white/10 focus-visible:ring-emerald-500/50 text-white"
+                   value={inputMessage}
+                   onChange={(e) => setInputMessage(e.target.value)}
+                   disabled={isLoading}
+                 />
+                 
+                 <Button 
+                   type="submit" 
+                   className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4"
+                   disabled={isLoading || !inputMessage.trim()}
+                 >
+                   <Send className="w-4 h-4" />
+                 </Button>
               </form>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Button
-                  variant="outline"
-                  size="sm" 
-                  className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full transition-colors"
-                  onClick={() => handleSuggestedQuestion("How can I help endangered species?")}
-                >
-                  How can I help endangered species?
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm" 
-                  className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full transition-colors"
-                  onClick={() => handleSuggestedQuestion("What animals are most at risk?")}
-                >
-                  What animals are most at risk?
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm" 
-                  className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full transition-colors"
-                  onClick={() => handleSuggestedQuestion("Indigenous conservation practices?")}
-                >
-                  Indigenous conservation practices?
-                </Button>
-              </div>
             </CardContent>
           </Card>
-          
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white bg-opacity-10 p-6 rounded-xl">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mb-4">
-                <i className="fas fa-hands-helping text-xl"></i>
-              </div>
-              <h3 className="font-heading font-bold text-xl mb-2">Support Conservation</h3>
-              <p className="mb-3 text-white text-opacity-90">Learn how you can contribute to global wildlife protection efforts</p>
-              <Button
-                variant="link" 
-                className="inline-flex items-center text-accent hover:text-white"
-              >
-                Find Organizations <i className="fas fa-arrow-right ml-1"></i>
-              </Button>
-            </div>
-            
-            <div className="bg-white bg-opacity-10 p-6 rounded-xl">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mb-4">
-                <i className="fas fa-book-open text-xl"></i>
-              </div>
-              <h3 className="font-heading font-bold text-xl mb-2">Educational Resources</h3>
-              <p className="mb-3 text-white text-opacity-90">Discover books, documentaries, and online courses about wildlife</p>
-              <Button
-                variant="link" 
-                className="inline-flex items-center text-accent hover:text-white"
-              >
-                Browse Resources <i className="fas fa-arrow-right ml-1"></i>
-              </Button>
-            </div>
-            
-            <div className="bg-white bg-opacity-10 p-6 rounded-xl">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mb-4">
-                <i className="fas fa-globe-americas text-xl"></i>
-              </div>
-              <h3 className="font-heading font-bold text-xl mb-2">Global Initiatives</h3>
-              <p className="mb-3 text-white text-opacity-90">Explore international efforts to protect endangered species</p>
-              <Button
-                variant="link" 
-                className="inline-flex items-center text-accent hover:text-white"
-              >
-                View Initiatives <i className="fas fa-arrow-right ml-1"></i>
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
