@@ -5,15 +5,22 @@ import { Button } from "@/components/ui/button";
 import { useChattbot } from "@/context/ChatbotContext";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Import Google AI
 import { 
   Send, Mic, Bot, Volume2, VolumeX, Sparkles, 
-  Leaf, Globe, BookOpen, X, ExternalLink
+  Leaf, Globe, BookOpen, X, Loader2
 } from "lucide-react";
 
-// --- Internal Component: Typewriter Effect ---
+// !!! ------------------------------------------------ !!!
+// PASTE YOUR API KEY HERE
+const API_KEY = "AIzaSyDbZ1pBx4a4laXcF9P60tEOpO_meVo_c2E"; 
+// !!! ------------------------------------------------ !!!
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(API_KEY);
+
 const Typewriter = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
-  
   useEffect(() => {
     setDisplayedText("");
     let index = 0;
@@ -24,56 +31,10 @@ const Typewriter = ({ text, onComplete }: { text: string; onComplete?: () => voi
         clearInterval(intervalId);
         if (onComplete) onComplete();
       }
-    }, 10); // Faster typing speed
+    }, 10);
     return () => clearInterval(intervalId);
   }, [text]);
-
-  return <span>{displayedText}</span>;
-};
-
-// --- THE LOCAL BRAIN (Simulated AI) ---
-const generateBotResponse = (input: string) => {
-  const lowerInput = input.toLowerCase();
-
-  if (lowerInput.includes("endangered") || lowerInput.includes("tiger") || lowerInput.includes("animal")) {
-    return {
-      text: "The Bengal Tiger is one of the most endangered species. Fewer than 2,500 remain in the wild due to poaching and habitat loss. Other critical species include the Black Rhino and Amur Leopard.",
-      image: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?q=80&w=1000&auto=format&fit=crop"
-    };
-  }
-  
-  if (lowerInput.includes("elephant") || lowerInput.includes("ivory")) {
-    return {
-      text: "Elephants are crucial ecosystem engineers. However, they face threats from the ivory trade. Conservationists are using AI to track herds and prevent poaching.",
-      image: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=1000&auto=format&fit=crop"
-    };
-  }
-
-  if (lowerInput.includes("global") || lowerInput.includes("action") || lowerInput.includes("initiative")) {
-    return {
-      text: "Global initiatives like '30x30' aim to protect 30% of the planet by 2030. Organizations like WWF and The Nature Conservancy are leading these efforts.",
-      image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=1000&auto=format&fit=crop"
-    };
-  }
-
-  if (lowerInput.includes("resource") || lowerInput.includes("learn") || lowerInput.includes("book")) {
-    return {
-      text: "Here are some great resources to learn more:\n\n• WWF Wild Classroom\n• National Geographic Conservation\n• The IUCN Red List\n\nWould you like links to any of these?",
-      image: null
-    };
-  }
-
-  if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
-    return {
-      text: "Hello! I am ready to help you explore the wild. Ask me about endangered species, climate change, or how to get involved!",
-      image: null
-    };
-  }
-
-  return {
-    text: "That is an interesting topic. While I don't have specific data on that right now, I recommend checking the IUCN Red List for the most up-to-date conservation status.",
-    image: null
-  };
+  return <span className="whitespace-pre-wrap">{displayedText}</span>;
 };
 
 const ConservationChatbot = () => {
@@ -98,7 +59,7 @@ const ConservationChatbot = () => {
     if (messages.length === 0) {
       addMessage({
         role: 'bot',
-        content: "Hello! I'm your ConservAR Guide. Ask me about endangered species, conservation strategies, or indigenous nature practices.",
+        content: "Hello! I am connected to the ConservAR AI Network. I can explain complex topics, translate languages, or help you plan conservation projects. What would you like to know?",
         timestamp: new Date().toISOString()
       });
     }
@@ -107,7 +68,9 @@ const ConservationChatbot = () => {
   const speakText = (text: string) => {
     if (!soundEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Strip markdown symbols (*) for smoother speech
+    const cleanText = text.replace(/\*/g, ''); 
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     window.speechSynthesis.speak(utterance);
   };
 
@@ -141,35 +104,56 @@ const ConservationChatbot = () => {
     if (e) e.preventDefault();
     if (!inputMessage.trim()) return;
     
+    // Check if API Key is missing
+    if (API_KEY === "PASTE_YOUR_GEMINI_KEY_HERE" || !API_KEY) {
+      toast({ title: "Config Error", description: "Please add your API Key in the code.", variant: "destructive" });
+      return;
+    }
+
     const userMsg = inputMessage.trim();
     setInputMessage('');
     setIsListening(false);
     
-    // 1. Add User Message
     addMessage({ role: 'user', content: userMsg, timestamp: new Date().toISOString() });
-    
     setIsLoading(true);
 
-    // 2. SIMULATE API CALL (The fix)
-    setTimeout(() => {
-      const response = generateBotResponse(userMsg);
+    try {
+      // 1. Configure the AI Model
+      const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+      
+      // 2. Set the "Persona" (System Instruction equivalent via prompt)
+      const prompt = `
+        You are an advanced AI assistant for a project called "ConservAR". 
+        Your goal is to educate users about wildlife conservation, biology, and nature.
+        Keep your answers concise, engaging, and hopeful. Use emojis occasionally.
+        
+        User Question: ${userMsg}
+      `;
+
+      // 3. Get Result from Google AI
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
       
       addMessage({ 
         role: 'bot', 
-        content: response.text, 
-        // We cheat slightly and store the image URL in the content if needed, 
-        // or purely rely on the rendering logic below. 
-        // For this quick fix, we will modify the message object in context or append markdown.
-        // Let's append a special marker for the image for now or use a custom field if you updated context.
-        // Assuming context is strict, we append a separator.
-        timestamp: new Date().toISOString(),
-        // @ts-ignore - Adding image property dynamically for this component
-        image: response.image 
+        content: text, 
+        timestamp: new Date().toISOString() 
       });
 
-      if (soundEnabled) speakText(response.text);
+      if (soundEnabled) speakText(text);
+
+    } catch (error) {
+      console.error("AI Error:", error);
+      toast({ title: "AI Error", description: "I couldn't reach the AI network.", variant: "destructive" });
+      addMessage({ 
+        role: 'bot', 
+        content: "I'm having trouble connecting to my AI brain right now. Please check your API key.", 
+        timestamp: new Date().toISOString() 
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500); // 1.5 second "thinking" delay
+    }
   };
 
   return (
@@ -179,20 +163,20 @@ const ConservationChatbot = () => {
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center p-2 bg-emerald-500/10 rounded-full mb-4 border border-emerald-500/20">
              <Sparkles className="w-4 h-4 text-emerald-400 mr-2" />
-             <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">ConservAR AI 2.0</span>
+             <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Powered by Gemini AI</span>
           </div>
-          <h2 className="font-bold text-4xl mb-3">Wildlife Conservation Guide</h2>
-          <p className="max-w-2xl mx-auto text-slate-400">Interactive AI powered by global conservation data.</p>
+          <h2 className="font-bold text-4xl mb-3">ConservAR Intelligent Guide</h2>
+          <p className="max-w-2xl mx-auto text-slate-400">Ask me anything about nature, science, or sustainability.</p>
         </div>
         
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           <div className="hidden lg:block col-span-1 space-y-3">
-            <h3 className="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-4">Quick Topics</h3>
+            <h3 className="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-4">Try Asking...</h3>
             {[
-              { label: "Endangered List", icon: <Leaf className="w-4 h-4"/>, query: "Tell me about endangered tigers" },
-              { label: "Global Action", icon: <Globe className="w-4 h-4"/>, query: "What global actions are being taken?" },
-              { label: "Resources", icon: <BookOpen className="w-4 h-4"/>, query: "Give me learning resources" },
+              { label: "Explain Symbiosis", icon: <Leaf className="w-4 h-4"/>, query: "Explain symbiosis like I'm 10 years old" },
+              { label: "Climate Solutions", icon: <Globe className="w-4 h-4"/>, query: "What are 3 things I can do to help climate change?" },
+              { label: "Fun Facts", icon: <Sparkles className="w-4 h-4"/>, query: "Tell me a mind-blowing fact about octopus" },
             ].map((item, i) => (
               <button
                 key={i}
@@ -208,14 +192,14 @@ const ConservationChatbot = () => {
           <Card className="col-span-1 lg:col-span-3 bg-slate-900/80 border-white/10 shadow-2xl overflow-hidden backdrop-blur-sm h-[600px] flex flex-col">
             <CardHeader className="bg-white/5 p-4 flex flex-row items-center justify-between border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20">
-                  <Bot className="text-white w-6 h-6" />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Sparkles className="text-white w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-lg">EcoGuide</h3>
+                  <h3 className="font-bold text-white text-lg">AI Assistant</h3>
                   <span className="flex items-center text-xs text-emerald-400">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
-                    Online
+                    Gemini Live
                   </span>
                 </div>
               </div>
@@ -235,36 +219,20 @@ const ConservationChatbot = () => {
                   >
                      <div className={`max-w-[85%] lg:max-w-[75%] p-4 rounded-2xl ${
                        message.role === 'user' 
-                       ? 'bg-emerald-600 text-white rounded-tr-sm' 
+                       ? 'bg-indigo-600 text-white rounded-tr-sm' 
                        : 'bg-slate-800 text-slate-200 border border-white/10 rounded-tl-sm'
                      }`}>
                         <div className="flex items-start gap-3">
                           {message.role === 'bot' && (
                              <div className="w-6 h-6 bg-slate-950 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                               <Bot className="w-3 h-3 text-emerald-500" />
+                               <Sparkles className="w-3 h-3 text-purple-400" />
                              </div>
                           )}
-                          <div className="flex flex-col gap-2">
-                            <div className="text-sm leading-relaxed">
-                              {message.role === 'bot' && index === messages.length - 1 && !isLoading ? (
-                                <Typewriter text={message.content} onComplete={scrollToBottom} />
-                              ) : (
-                                <span className="whitespace-pre-wrap">{message.content}</span>
-                              )}
-                            </div>
-                            
-                            {/* RENDER IMAGE IF AVAILABLE */}
-                            {/* @ts-ignore */}
-                            {message.image && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 1 }}
-                                className="mt-2 rounded-lg overflow-hidden border border-white/10"
-                              >
-                                {/* @ts-ignore */}
-                                <img src={message.image} alt="Reference" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500" />
-                              </motion.div>
+                          <div className="text-sm leading-relaxed">
+                            {message.role === 'bot' && index === messages.length - 1 && !isLoading ? (
+                              <Typewriter text={message.content} onComplete={scrollToBottom} />
+                            ) : (
+                              <span className="whitespace-pre-wrap">{message.content}</span>
                             )}
                           </div>
                         </div>
@@ -276,10 +244,9 @@ const ConservationChatbot = () => {
               {isLoading && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="bg-slate-800 border border-white/10 p-4 rounded-2xl rounded-tl-sm ml-0">
-                    <div className="flex space-x-1.5">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                    <div className="flex space-x-2 items-center text-slate-400 text-xs">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                      <span>Thinking...</span>
                     </div>
                   </div>
                 </motion.div>
@@ -301,8 +268,8 @@ const ConservationChatbot = () => {
                  
                  <Input 
                    type="text" 
-                   placeholder={isListening ? "Listening..." : "Ask about tigers, elephants, or resources..."}
-                   className="flex-grow bg-slate-950 border-white/10 focus-visible:ring-emerald-500/50 text-white"
+                   placeholder={isListening ? "Listening..." : "Ask me anything..."}
+                   className="flex-grow bg-slate-950 border-white/10 focus-visible:ring-indigo-500/50 text-white"
                    value={inputMessage}
                    onChange={(e) => setInputMessage(e.target.value)}
                    disabled={isLoading}
@@ -310,7 +277,7 @@ const ConservationChatbot = () => {
                  
                  <Button 
                    type="submit" 
-                   className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-4"
+                   className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-4"
                    disabled={isLoading || !inputMessage.trim()}
                  >
                    <Send className="w-4 h-4" />
