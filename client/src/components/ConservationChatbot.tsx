@@ -64,44 +64,6 @@ const MessageText = ({ text, isBot }: { text: string; isBot: boolean }) => {
   );
 };
 
-const getOfflineBotResponse = (message: string) => {
-  const normalized = message.toLowerCase();
-
-  if (/^(hi|hello|hey|hii|hiii)\b/.test(normalized.trim())) {
-    return "Hi! I can help with wildlife, endangered species, habitats, and conservation.";
-  }
-
-  if (
-    normalized.includes("what is endangered") ||
-    normalized.includes("meaning of endangered") ||
-    normalized.includes("endangered mean")
-  ) {
-    return "Endangered means a species is at serious risk of disappearing from the wild.\n\nA species can become endangered when:\n\n- Its habitat is destroyed or fragmented.\n- It is hunted, poached, or overused by humans.\n- Pollution, disease, or climate change makes survival harder.\n- Its population becomes too small to recover easily.\n\nExamples include tigers, some rhino species, and many sea turtles. Conservation helps by protecting habitats, stopping illegal hunting, and supporting breeding or recovery programs.";
-  }
-
-  if (normalized.includes("endangered")) {
-    return "An endangered species is one that may go extinct if threats are not reduced.\n\nCommon threats include habitat loss, poaching, pollution, climate change, and shrinking food sources. Conservation teams protect endangered species through wildlife reserves, anti-poaching patrols, habitat restoration, breeding programs, and public education.";
-  }
-
-  if (normalized.includes("tiger")) {
-    return "Tigers became endangered mainly because of habitat loss, poaching, and conflict with humans.\n\n- Forests were cleared or fragmented for farms, roads, and settlements.\n- Tigers were hunted for skins and illegal wildlife trade.\n- Their prey declined in many regions.\n\nProtected reserves, anti-poaching patrols, and wildlife corridors help tiger populations recover.";
-  }
-
-  if (normalized.includes("elephant")) {
-    return "Elephants are threatened by habitat loss, ivory poaching, and conflict with people.\n\n- Expanding farms and settlements reduce migration routes.\n- Poaching targets tusks.\n- Human-elephant conflict increases when elephants enter crop fields.\n\nConservation work focuses on protected corridors, anti-poaching enforcement, and community-led conflict reduction.";
-  }
-
-  if (normalized.includes("rhino") || normalized.includes("rhinoceros")) {
-    return "Rhinos are threatened mostly by poaching and habitat pressure.\n\n- Their horns are sold illegally despite having no proven medical value.\n- Grassland and savanna habitats are fragmented.\n- Small populations need strong protection to avoid further decline.\n\nAnti-poaching teams, monitored reserves, and habitat restoration are key conservation tools.";
-  }
-
-  if (normalized.includes("conservation")) {
-    return "Conservation protects species, habitats, and the relationships between people and nature.\n\n- Protected areas give wildlife safer spaces.\n- Habitat restoration rebuilds damaged ecosystems.\n- Community programs reduce conflict and support local livelihoods.\n- Education helps people understand why biodiversity matters.";
-  }
-
-  return "I can answer wildlife and conservation questions. Try asking about why a species is endangered, where it lives, what threatens it, or how people can help protect it.";
-};
-
 const ConservationChatbot = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -224,16 +186,22 @@ const ConservationChatbot = () => {
       });
     } catch (error) {
       console.error("Chatbot API error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "The AI chatbot is unavailable right now.";
 
       addMessage({
         role: "bot",
-        content: getOfflineBotResponse(userMsg),
+        content:
+          "The AI chatbot is unavailable right now. Please make sure GROQ_API_KEY is added in Vercel Environment Variables and redeploy the project.",
         timestamp: new Date().toISOString(),
       });
 
       toast({
-        title: "Using offline guide",
-        description: "The hosted AI API is unavailable, so I answered with the built-in conservation guide.",
+        title: "AI unavailable",
+        description: errorMessage,
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
