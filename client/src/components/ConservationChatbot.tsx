@@ -194,7 +194,7 @@ const ConservationChatbot = () => {
       addMessage({
         role: "bot",
         content:
-          "The AI chatbot is unavailable right now. Please make sure GROQ_API_KEY is added in Vercel Environment Variables and redeploy the project.",
+          errorMessage || "The AI chatbot is unavailable right now.",
         timestamp: new Date().toISOString(),
       });
 
