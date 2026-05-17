@@ -71,6 +71,18 @@ const getOfflineBotResponse = (message: string) => {
     return "Hi! I can help with wildlife, endangered species, habitats, and conservation.";
   }
 
+  if (
+    normalized.includes("what is endangered") ||
+    normalized.includes("meaning of endangered") ||
+    normalized.includes("endangered mean")
+  ) {
+    return "Endangered means a species is at serious risk of disappearing from the wild.\n\nA species can become endangered when:\n\n- Its habitat is destroyed or fragmented.\n- It is hunted, poached, or overused by humans.\n- Pollution, disease, or climate change makes survival harder.\n- Its population becomes too small to recover easily.\n\nExamples include tigers, some rhino species, and many sea turtles. Conservation helps by protecting habitats, stopping illegal hunting, and supporting breeding or recovery programs.";
+  }
+
+  if (normalized.includes("endangered")) {
+    return "An endangered species is one that may go extinct if threats are not reduced.\n\nCommon threats include habitat loss, poaching, pollution, climate change, and shrinking food sources. Conservation teams protect endangered species through wildlife reserves, anti-poaching patrols, habitat restoration, breeding programs, and public education.";
+  }
+
   if (normalized.includes("tiger")) {
     return "Tigers became endangered mainly because of habitat loss, poaching, and conflict with humans.\n\n- Forests were cleared or fragmented for farms, roads, and settlements.\n- Tigers were hunted for skins and illegal wildlife trade.\n- Their prey declined in many regions.\n\nProtected reserves, anti-poaching patrols, and wildlife corridors help tiger populations recover.";
   }
