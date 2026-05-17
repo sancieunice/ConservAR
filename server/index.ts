@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -5,6 +6,12 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve static files from public directory (for 3D models, images, etc.)
+import path from "path";
+import { fileURLToPath } from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use(express.static(path.resolve(__dirname, "..", "public")));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,6 +44,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Log environment variable status on startup for easier debugging
+  if (process.env.GROQ_API_KEY?.trim()) {
+    log("✓ Groq API key detected on startup");
+  } else {
+    log(
+      "⚠ WARNING: GROQ_API_KEY is not set. Chatbot features will be disabled. Check your .env file.",
+    );
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

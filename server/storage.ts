@@ -68,7 +68,7 @@ export class MemStorage implements IStorage {
         conservationStatus: "Endangered",
         region: "China",
         habitat: "Bamboo Forests",
-        imageUrl: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "/images/giant-panda.jpg",
         modelUrl: "/models/panda.glb",
         hasArModel: true
       },
@@ -80,7 +80,7 @@ export class MemStorage implements IStorage {
         conservationStatus: "Endangered",
         region: "India",
         habitat: "Tropical Forests",
-        imageUrl: "https://images.unsplash.com/photo-1624983618085-fc40f745eb9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "/images/Bengal tiger.png",
         modelUrl: "/models/tiger.glb",
         hasArModel: true
       },
@@ -92,20 +92,20 @@ export class MemStorage implements IStorage {
         conservationStatus: "Vulnerable",
         region: "Africa",
         habitat: "Savannas",
-        imageUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "/images/African-elephant.png",
         modelUrl: "/models/elephant.glb",
         hasArModel: true
       },
       {
-        name: "Bald Eagle",
-        scientificName: "Haliaeetus leucocephalus",
-        description: "The bald eagle is a bird of prey with a white head and tail, dark brown body, and yellow beak.",
-        culturalSignificance: "National symbol of the United States. Represents freedom and strength in American culture and appears on official seals and currency.",
-        conservationStatus: "Recovered",
-        region: "North America",
-        habitat: "Coastal Areas",
-        imageUrl: "https://images.unsplash.com/photo-1497206365907-f5e630693df0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        modelUrl: "/models/eagle.glb",
+        name: "White Rhinoceros",
+        scientificName: "Ceratotherium simum",
+        description: "The white rhinoceros is the largest species of rhinoceros, characterized by its wide mouth and two horns.",
+        culturalSignificance: "Symbol of strength and protection in African cultures. Rhinos are featured in traditional art and are considered guardians of the land.",
+        conservationStatus: "Near Threatened",
+        region: "Africa",
+        habitat: "Savannas and Grasslands",
+        imageUrl: "/images/white-rhino.jpg",
+        modelUrl: "/models/white_rhinoceros.glb",
         hasArModel: true
       },
       {
@@ -128,7 +128,7 @@ export class MemStorage implements IStorage {
         conservationStatus: "Least Concern",
         region: "Australia",
         habitat: "Grasslands",
-        imageUrl: "https://images.unsplash.com/photo-1543946207-39bd91e70ca7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "/images/Red-Kangaroo.jpg",
         modelUrl: null,
         hasArModel: false
       }

@@ -13,6 +13,10 @@ interface FeaturedAnimalsProps {
 
 const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) => {
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const getAnimalImageUrl = (animal: Animal) =>
+    animal.name.toLowerCase() === "kangaroo"
+      ? "/images/Red-Kangaroo.jpg"
+      : animal.imageUrl;
   
   const openAnimalDetails = (animal: Animal) => {
     setSelectedAnimal(animal);
@@ -39,10 +43,10 @@ const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) =>
   };
 
   return (
-    <section id="animals" className="py-16 bg-neutral-light">
+    <section id="animals" className="py-16 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="font-heading font-bold text-3xl mb-3 text-primary">Endangered Species & Their Cultural Significance</h2>
+          <h2 className="font-heading font-bold text-3xl mb-3 text-emerald-900">Endangered Species & Their Cultural Significance</h2>
           <p className="max-w-2xl mx-auto text-gray-600">Discover wildlife from around the globe and learn how they shape cultural identities and traditions</p>
         </div>
         
@@ -75,15 +79,15 @@ const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) =>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {animals.map((animal) => (
-              <div key={animal.id} className="animal-card bg-white rounded-xl overflow-hidden shadow-lg">
+              <div key={animal.id} className="animal-card bg-white text-slate-950 rounded-xl overflow-hidden shadow-lg border border-slate-200">
                 <img 
-                  src={animal.imageUrl} 
+                  src={getAnimalImageUrl(animal)} 
                   alt={`${animal.name} in natural habitat`} 
                   className="w-full h-52 object-cover"
                 />
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-heading font-bold text-xl">{animal.name}</h3>
+                    <h3 className="font-heading font-bold text-xl text-slate-950">{animal.name}</h3>
                     <span className={`${getStatusColor(animal.conservationStatus)} text-white text-xs py-1 px-2 rounded-full`}>
                       {animal.conservationStatus}
                     </span>
@@ -94,7 +98,7 @@ const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) =>
                     <span><i className="fas fa-paw mr-1"></i> {animal.habitat}</span>
                   </div>
                   <Button 
-                    className="w-full bg-primary hover:bg-secondary text-white py-2 rounded-lg transition-colors" 
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded-lg transition-colors" 
                     onClick={() => openAnimalDetails(animal)}
                   >
                     Learn More
@@ -108,7 +112,7 @@ const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) =>
         <div className="mt-12 text-center">
           <Button 
             variant="link" 
-            className="inline-flex items-center text-primary hover:text-secondary font-bold"
+            className="inline-flex items-center text-emerald-800 hover:text-emerald-950 font-bold"
           >
             Explore All Animals <i className="fas fa-arrow-right ml-2"></i>
           </Button>
@@ -117,47 +121,47 @@ const FeaturedAnimals = ({ animals, isLoading, error }: FeaturedAnimalsProps) =>
 
       {/* Animal Details Dialog */}
       <Dialog open={!!selectedAnimal} onOpenChange={() => closeAnimalDetails()}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white text-slate-950 border-slate-200">
           {selectedAnimal && (
             <>
               <img 
-                src={selectedAnimal.imageUrl} 
+                src={getAnimalImageUrl(selectedAnimal)} 
                 alt={selectedAnimal.name} 
                 className="w-full h-64 object-cover rounded-t-lg -mt-6 -mx-6 mb-4"
               />
               <DialogHeader>
                 <div className="flex justify-between items-center">
-                  <DialogTitle className="text-2xl font-heading">{selectedAnimal.name}</DialogTitle>
+                  <DialogTitle className="text-2xl font-heading text-slate-950">{selectedAnimal.name}</DialogTitle>
                   <span className={`${getStatusColor(selectedAnimal.conservationStatus)} text-white text-xs py-1 px-2 rounded-full`}>
                     {selectedAnimal.conservationStatus}
                   </span>
                 </div>
-                <DialogDescription className="text-sm italic font-medium">
+                <DialogDescription className="text-sm italic font-medium text-slate-600">
                   {selectedAnimal.scientificName}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="mt-4">
-                <h4 className="font-bold text-primary mb-2">Description</h4>
+                <h4 className="font-bold text-emerald-900 mb-2">Description</h4>
                 <p className="mb-4 text-gray-700">{selectedAnimal.description}</p>
                 
-                <h4 className="font-bold text-primary mb-2">Cultural Significance</h4>
+                <h4 className="font-bold text-emerald-900 mb-2">Cultural Significance</h4>
                 <p className="mb-4 text-gray-700">{selectedAnimal.culturalSignificance}</p>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <h5 className="text-sm font-semibold text-gray-600">Region</h5>
-                    <p>{selectedAnimal.region}</p>
+                    <p className="text-slate-900">{selectedAnimal.region}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <h5 className="text-sm font-semibold text-gray-600">Habitat</h5>
-                    <p>{selectedAnimal.habitat}</p>
+                    <p className="text-slate-900">{selectedAnimal.habitat}</p>
                   </div>
                 </div>
                 
                 {selectedAnimal.hasArModel && (
                   <Button 
-                    className="w-full bg-accent hover:bg-orange-500 text-white" 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white" 
                     onClick={closeAnimalDetails}
                   >
                     <i className="fas fa-cube mr-2"></i> View in AR

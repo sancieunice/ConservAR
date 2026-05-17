@@ -112,6 +112,21 @@
   }
 }
 
+/* Prevent focus-grabbing on initial load to stop auto-scrolling */
+@keyframes preload-delay {
+  0% {
+    visibility: hidden;
+  }
+
+  100% {
+    visibility: visible;
+  }
+}
+
+body {
+  animation: preload-delay 0.3s forwards;
+}
+
 /* Prevent layout shift when scrollbars appear/disappear by reserving scrollbar space */
 html {
   /* Modern browsers */

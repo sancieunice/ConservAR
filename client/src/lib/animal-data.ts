@@ -11,7 +11,7 @@ export const DEFAULT_ANIMALS: Animal[] = [
     conservationStatus: "Endangered",
     region: "China",
     habitat: "Bamboo Forests",
-    imageUrl: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    imageUrl: "/images/giant-panda.jpg",
     modelUrl: "/models/panda.glb",
     hasArModel: true
   },
@@ -24,7 +24,7 @@ export const DEFAULT_ANIMALS: Animal[] = [
     conservationStatus: "Endangered",
     region: "India",
     habitat: "Tropical Forests",
-    imageUrl: "https://images.unsplash.com/photo-1624983618085-fc40f745eb9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    imageUrl: "/images/Bengal tiger.png",
     modelUrl: "/models/tiger.glb",
     hasArModel: true
   },
@@ -37,7 +37,7 @@ export const DEFAULT_ANIMALS: Animal[] = [
     conservationStatus: "Vulnerable",
     region: "Africa",
     habitat: "Savannas",
-    imageUrl: "/images/african-elephant.jpg",
+    imageUrl: "/images/African-elephant.png",
     modelUrl: "/models/elephant.glb",
     hasArModel: true
   },
@@ -76,7 +76,7 @@ export const DEFAULT_ANIMALS: Animal[] = [
     conservationStatus: "Least Concern",
     region: "Australia",
     habitat: "Grasslands",
-    imageUrl: "https://images.unsplash.com/photo-1543946207-39bd91e70ca7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    imageUrl: "/images/Red-Kangaroo.jpg",
     modelUrl: null,
     hasArModel: false
   }

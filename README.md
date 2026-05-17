@@ -16,19 +16,30 @@ npm install
 2. Start the full-stack dev server (backend serves frontend + API):
 
 Windows (cmd):
+
 ```cmd
 set PORT=5001 && npm run dev
 ```
 
 PowerShell:
+
 ```powershell
 $env:PORT=5001; npm run dev
 ```
 
-3. Open http://localhost:5001
+3. Set up Groq AI key for the chatbot (required):
+   - Get your FREE API key from https://console.groq.com/keys
+   - Create a `.env` file in the root directory
+   - Add: `GROQ_API_KEY=your_api_key_here`
+   - Optional: `GROQ_MODEL=llama-3.3-70b-versatile`
+   - Without the API key, chatbot requests return a service-unavailable message
+
+4. Open http://localhost:5001
 
 Notes:
+
 - The server uses an in-memory storage implementation for sample data (no DB required).
+- The chatbot uses Groq AI chat completions for AI-powered responses (free tier available).
 - If you want to push this repo to GitHub, install the `gh` CLI and run:
 
 ```bash

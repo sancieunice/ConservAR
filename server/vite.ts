@@ -55,6 +55,11 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Serve static files from public directory BEFORE catch-all route
+  const publicPath = path.resolve(__dirname, "..", "public");
+  app.use(express.static(publicPath));
+  
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 

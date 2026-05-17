@@ -7,7 +7,7 @@ import { useChallenge } from "@/context/ChallengeContext";
 import { Challenge } from "@shared/schema";
 
 const Challenges = () => {
-  const { currentChallenge, setCurrentChallenge, selectedOption, selectOption, checkAnswer, showHint, hintVisible } = useChallenge();
+  const { currentChallenge, setCurrentChallenge, selectedOption, answerResult, selectOption, checkAnswer, showHint, hintVisible } = useChallenge();
   
   // Load challenges data
   const { data: challenges, isLoading } = useQuery<Challenge[]>({
@@ -51,12 +51,46 @@ const Challenges = () => {
 
   const questions = getCurrentQuestions();
   const currentQuestion = questions && questions.length > 0 ? questions[0] : null;
+  const getOptionStyle = (optionId: string) => {
+    const isSelected = selectedOption === optionId;
+    const isCorrectOption = answerResult?.correctAnswer === optionId;
+
+    if (answerResult) {
+      if (isCorrectOption) {
+        return "border-emerald-500 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-200";
+      }
+      if (isSelected && !answerResult.isCorrect) {
+        return "border-red-500 bg-red-50 text-red-950 ring-2 ring-red-200";
+      }
+      return "border-slate-200 bg-white text-slate-700 opacity-80";
+    }
+
+    if (isSelected) {
+      return "border-emerald-600 bg-emerald-100 text-emerald-950 ring-2 ring-emerald-200";
+    }
+
+    return "border-slate-200 bg-white text-slate-900 hover:border-emerald-500 hover:bg-emerald-50";
+  };
+
+  const getOptionBadgeStyle = (optionId: string) => {
+    const isSelected = selectedOption === optionId;
+    const isCorrectOption = answerResult?.correctAnswer === optionId;
+
+    if (answerResult) {
+      if (isCorrectOption) return "border-emerald-600 bg-emerald-600 text-white";
+      if (isSelected && !answerResult.isCorrect) return "border-red-600 bg-red-600 text-white";
+    }
+
+    return isSelected
+      ? "border-emerald-600 bg-emerald-600 text-white"
+      : "border-slate-300 bg-white text-slate-700";
+  };
 
   return (
-    <section id="challenges" className="py-16 bg-neutral-light">
+    <section id="challenges" className="py-16 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="font-heading font-bold text-3xl mb-3 text-primary">Cultural Challenges</h2>
+          <h2 className="font-heading font-bold text-3xl mb-3 text-emerald-900">Cultural Challenges</h2>
           <p className="max-w-2xl mx-auto text-gray-600">Test your knowledge about wildlife and learn about different cultures through fun interactive challenges</p>
         </div>
         
@@ -88,9 +122,9 @@ const Challenges = () => {
               </div>
             </Card>
           ) : currentChallenge && currentQuestion ? (
-            <Card className="mb-10">
+            <Card className="mb-10 overflow-hidden bg-white text-slate-950 border-slate-200 shadow-lg">
               <div className="flex flex-col md:flex-row">
-                <div className="md:w-1/3 bg-primary p-6 text-white">
+                <div className="md:w-1/3 bg-emerald-900 p-6 text-white">
                   <h3 className="font-heading font-bold text-xl mb-4">{currentChallenge.title}</h3>
                   <p className="mb-4 text-white text-opacity-90">{currentChallenge.description}</p>
                   <div className="flex items-center">
@@ -98,25 +132,17 @@ const Challenges = () => {
                     <span><i className="fas fa-medal mr-1"></i> 100 pts</span>
                   </div>
                 </div>
-                <div className="md:w-2/3 p-6">
+                <div className="md:w-2/3 p-6 bg-white">
                   <h4 className="font-heading font-bold text-lg mb-4">{currentQuestion.question}</h4>
                   
                   <div className="space-y-3 mb-6">
                     {currentQuestion.options && currentQuestion.options.map((option: any) => (
                       <div 
                         key={option.id}
-                        className={`game-option flex items-center p-3 border ${
-                          selectedOption === option.id 
-                            ? 'border-primary bg-primary bg-opacity-10' 
-                            : 'border-gray-200'
-                        } rounded-lg cursor-pointer hover:border-primary hover:bg-gray-50`}
+                        className={`game-option flex items-center p-3 border rounded-lg cursor-pointer transition-all ${getOptionStyle(option.id)}`}
                         onClick={() => selectOption(option.id)}
                       >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${
-                          selectedOption === option.id 
-                            ? 'border-primary text-primary' 
-                            : 'border-gray-300'
-                        } mr-3`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 mr-3 font-semibold ${getOptionBadgeStyle(option.id)}`}>
                           <span>{option.id.toUpperCase()}</span>
                         </div>
                         <span>{option.text}</span>
@@ -124,6 +150,25 @@ const Challenges = () => {
                     ))}
                   </div>
                   
+                  {answerResult && (
+                    <div
+                      className={`mb-4 rounded-lg border p-4 ${
+                        answerResult.isCorrect
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+                          : "border-red-300 bg-red-50 text-red-950"
+                      }`}
+                    >
+                      <p className="font-bold">
+                        {answerResult.isCorrect ? "Correct" : "Incorrect"}
+                      </p>
+                      <p className="mt-1 text-sm">
+                        {answerResult.isCorrect
+                          ? "Great job. You earned 100 points."
+                          : `The correct answer is ${answerResult.correctAnswer.toUpperCase()}.`}
+                      </p>
+                    </div>
+                  )}
+
                   {hintVisible && currentQuestion.explanation && (
                     <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800">
@@ -136,15 +181,15 @@ const Challenges = () => {
                   <div className="flex justify-between">
                     <Button 
                       variant="ghost" 
-                      className="text-primary hover:text-secondary flex items-center"
+                      className="text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50 flex items-center"
                       onClick={showHint}
                     >
                       <i className="fas fa-lightbulb mr-1"></i> Hint
                     </Button>
                     <Button 
-                      className="bg-primary hover:bg-secondary text-white"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white disabled:bg-slate-300 disabled:text-slate-500"
                       onClick={checkAnswer}
-                      disabled={!selectedOption}
+                      disabled={!selectedOption || !!answerResult}
                     >
                       Submit Answer
                     </Button>
@@ -159,7 +204,7 @@ const Challenges = () => {
           )}
           
           {/* Challenge Selection */}
-          <h3 className="font-heading font-bold text-2xl mb-6 text-center">More Challenges</h3>
+          <h3 className="font-heading font-bold text-2xl mb-6 text-center text-slate-950">More Challenges</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isLoading ? (
               [...Array(4)].map((_, i) => (
