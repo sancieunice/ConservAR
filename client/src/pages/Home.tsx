@@ -7,6 +7,7 @@ import Challenges from "@/components/Challenges";
 import ConservationChatbot from "@/components/ConservationChatbot";
 import Footer from "@/components/Footer";
 import { Animal } from "@shared/schema";
+import { DEFAULT_ANIMALS, DEFAULT_AR_MODELS } from "@/lib/animal-data";
 
 export default function Home() {
   // Load animals data
@@ -20,6 +21,10 @@ export default function Home() {
     queryKey: ["/api/animals/ar/models"],
     staleTime: 60000, // 1 minute
   });
+
+  const displayAnimals = animals && animals.length > 0 ? animals : DEFAULT_ANIMALS;
+  const displayArModels =
+    arModels && arModels.length > 0 ? arModels : DEFAULT_AR_MODELS;
 
   // Preload assets
   useEffect(() => {
@@ -49,14 +54,14 @@ export default function Home() {
       <Hero />
       
       <FeaturedAnimals 
-        animals={animals || []} 
-        isLoading={animalsLoading} 
-        error={animalsError ? true : false} 
+        animals={displayAnimals} 
+        isLoading={animalsLoading && !displayAnimals.length} 
+        error={false} 
       />
       
       <ARExperience 
-        arModels={arModels || []} 
-        isLoading={arModelsLoading} 
+        arModels={displayArModels} 
+        isLoading={arModelsLoading && !displayArModels.length} 
       />
       
       <Challenges />

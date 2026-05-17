@@ -64,6 +64,32 @@ const MessageText = ({ text, isBot }: { text: string; isBot: boolean }) => {
   );
 };
 
+const getOfflineBotResponse = (message: string) => {
+  const normalized = message.toLowerCase();
+
+  if (/^(hi|hello|hey|hii|hiii)\b/.test(normalized.trim())) {
+    return "Hi! I can help with wildlife, endangered species, habitats, and conservation.";
+  }
+
+  if (normalized.includes("tiger")) {
+    return "Tigers became endangered mainly because of habitat loss, poaching, and conflict with humans.\n\n- Forests were cleared or fragmented for farms, roads, and settlements.\n- Tigers were hunted for skins and illegal wildlife trade.\n- Their prey declined in many regions.\n\nProtected reserves, anti-poaching patrols, and wildlife corridors help tiger populations recover.";
+  }
+
+  if (normalized.includes("elephant")) {
+    return "Elephants are threatened by habitat loss, ivory poaching, and conflict with people.\n\n- Expanding farms and settlements reduce migration routes.\n- Poaching targets tusks.\n- Human-elephant conflict increases when elephants enter crop fields.\n\nConservation work focuses on protected corridors, anti-poaching enforcement, and community-led conflict reduction.";
+  }
+
+  if (normalized.includes("rhino") || normalized.includes("rhinoceros")) {
+    return "Rhinos are threatened mostly by poaching and habitat pressure.\n\n- Their horns are sold illegally despite having no proven medical value.\n- Grassland and savanna habitats are fragmented.\n- Small populations need strong protection to avoid further decline.\n\nAnti-poaching teams, monitored reserves, and habitat restoration are key conservation tools.";
+  }
+
+  if (normalized.includes("conservation")) {
+    return "Conservation protects species, habitats, and the relationships between people and nature.\n\n- Protected areas give wildlife safer spaces.\n- Habitat restoration rebuilds damaged ecosystems.\n- Community programs reduce conflict and support local livelihoods.\n- Education helps people understand why biodiversity matters.";
+  }
+
+  return "I can answer wildlife and conservation questions. Try asking about why a species is endangered, where it lives, what threatens it, or how people can help protect it.";
+};
+
 const ConservationChatbot = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -166,7 +192,15 @@ const ConservationChatbot = () => {
         }),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { message?: string; timestamp?: string } = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error("The online chatbot is unavailable right now.");
+      }
+
       if (!response.ok) {
         throw new Error(data?.message || `API error: ${response.status}`);
       }
@@ -179,21 +213,15 @@ const ConservationChatbot = () => {
     } catch (error) {
       console.error("Chatbot API error:", error);
 
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "I couldn't process that right now. Please try again in a moment.";
-
       addMessage({
         role: "bot",
-        content: errorMessage,
+        content: getOfflineBotResponse(userMsg),
         timestamp: new Date().toISOString(),
       });
 
       toast({
-        title: "API Error",
-        description: errorMessage,
-        variant: "destructive",
+        title: "Using offline guide",
+        description: "The hosted AI API is unavailable, so I answered with the built-in conservation guide.",
       });
     } finally {
       setIsLoading(false);

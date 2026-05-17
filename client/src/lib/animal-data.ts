@@ -12,8 +12,8 @@ export const DEFAULT_ANIMALS: Animal[] = [
     region: "China",
     habitat: "Bamboo Forests",
     imageUrl: "/images/giant-panda.jpg",
-    modelUrl: "/models/panda.glb",
-    hasArModel: true
+    modelUrl: null,
+    hasArModel: false
   },
   {
     id: 2,
@@ -25,8 +25,8 @@ export const DEFAULT_ANIMALS: Animal[] = [
     region: "India",
     habitat: "Tropical Forests",
     imageUrl: "/images/Bengal tiger.png",
-    modelUrl: "/models/tiger.glb",
-    hasArModel: true
+    modelUrl: null,
+    hasArModel: false
   },
   {
     id: 3,
@@ -38,20 +38,20 @@ export const DEFAULT_ANIMALS: Animal[] = [
     region: "Africa",
     habitat: "Savannas",
     imageUrl: "/images/African-elephant.png",
-    modelUrl: "/models/elephant.glb",
-    hasArModel: true
+    modelUrl: null,
+    hasArModel: false
   },
   {
     id: 4,
-    name: "Bald Eagle",
-    scientificName: "Haliaeetus leucocephalus",
-    description: "The bald eagle is a bird of prey with a white head and tail, dark brown body, and yellow beak.",
-    culturalSignificance: "National symbol of the United States. Represents freedom and strength in American culture and appears on official seals and currency.",
-    conservationStatus: "Recovered",
-    region: "North America",
-    habitat: "Coastal Areas",
-    imageUrl: "https://images.unsplash.com/photo-1497206365907-f5e630693df0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    modelUrl: "/models/eagle.glb",
+    name: "White Rhinoceros",
+    scientificName: "Ceratotherium simum",
+    description: "The white rhinoceros is the largest species of rhinoceros, characterized by its wide mouth and two horns.",
+    culturalSignificance: "Symbol of strength and protection in African cultures. Rhinos are featured in traditional art and are considered guardians of the land.",
+    conservationStatus: "Near Threatened",
+    region: "Africa",
+    habitat: "Savannas and Grasslands",
+    imageUrl: "/images/white-rhino.jpg",
+    modelUrl: "/models/white_rhinoceros.glb",
     hasArModel: true
   },
   {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChallenge } from "@/context/ChallengeContext";
 import { Challenge } from "@shared/schema";
+import { DEFAULT_CHALLENGES } from "@/lib/challenge-data";
 
 const Challenges = () => {
   const { currentChallenge, setCurrentChallenge, selectedOption, answerResult, selectOption, checkAnswer, showHint, hintVisible } = useChallenge();
@@ -14,12 +15,15 @@ const Challenges = () => {
     queryKey: ["/api/challenges"],
     staleTime: 60000, // 1 minute
   });
+  const displayChallenges =
+    challenges && challenges.length > 0 ? challenges : DEFAULT_CHALLENGES;
+  const showLoading = isLoading && displayChallenges.length === 0;
 
   // Select a challenge by type
   const selectChallenge = (type: string) => {
-    if (!challenges) return;
+    if (!displayChallenges) return;
     
-    const filteredChallenges = challenges.filter(
+    const filteredChallenges = displayChallenges.filter(
       challenge => challenge.type.toLowerCase() === type.toLowerCase()
     );
     
@@ -30,10 +34,10 @@ const Challenges = () => {
 
   // Ensure we have a current challenge when data loads
   useEffect(() => {
-    if (challenges && challenges.length > 0 && !currentChallenge) {
-      setCurrentChallenge(challenges[0]);
+    if (displayChallenges.length > 0 && !currentChallenge) {
+      setCurrentChallenge(displayChallenges[0]);
     }
-  }, [challenges, currentChallenge, setCurrentChallenge]);
+  }, [displayChallenges, currentChallenge, setCurrentChallenge]);
 
   // Parse questions from JSON for the current challenge
   const getCurrentQuestions = () => {
@@ -96,7 +100,7 @@ const Challenges = () => {
         
         <div className="max-w-4xl mx-auto">
           {/* Current Challenge Card */}
-          {isLoading ? (
+          {showLoading ? (
             <Card className="mb-10">
               <div className="flex flex-col md:flex-row">
                 <div className="md:w-1/3 bg-primary p-6">
@@ -206,7 +210,7 @@ const Challenges = () => {
           {/* Challenge Selection */}
           <h3 className="font-heading font-bold text-2xl mb-6 text-center text-slate-950">More Challenges</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isLoading ? (
+            {showLoading ? (
               [...Array(4)].map((_, i) => (
                 <Card key={i} className="overflow-hidden">
                   <Skeleton className="h-36 w-full" />
@@ -220,7 +224,7 @@ const Challenges = () => {
                 </Card>
               ))
             ) : (
-              challenges?.filter(challenge => 
+              displayChallenges.filter(challenge => 
                 !currentChallenge || challenge.id !== currentChallenge.id
               ).map((challenge) => (
                 <div 
